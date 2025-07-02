@@ -14,18 +14,22 @@ resource "aws_iam_user" "test-user" {
 }
 
 resource "aws_iam_policy" "admin" {
-name="Admin"
-policy = <<EOF
+  name = "Admin"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
-  "Statement": {
-    "Effect": "Allow",
-    "Action": "*",
-    "Resource": "*"
-  }
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "*",
+      "Resource": "*"
+    }
+  ]
 }
- EOF
+EOF
 }
+
 
 //way 2 to add   iam policy form json file
 # resource "aws_iam_policy" "admin" {
@@ -36,4 +40,47 @@ policy = <<EOF
 resource "aws_iam_user_policy_attachment" "harsh-admin-access" {
     user= aws_iam_user.test-user.name
     policy_arn = aws_iam_policy.admin.arn
+}
+
+
+resource "aws_s3_bucket" "finance" {
+  bucket = "finance-21090test"
+  tags = {
+    Description ="Finance is key"
+  }
+}
+
+resource "aws_s3_object" "finance-test" {
+  content = "/root/finance/finance-test.doc"
+  key = "finance-test.doc"
+  bucket = aws_s3_bucket.finance.id
+}
+resource "aws_iam_group" "finance-data" {
+  name= "finance-analytics"
+}
+
+
+resource "aws_s3_bucket_policy" "finance-policy" {
+  bucket = aws_s3_bucket.finance.id
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Id": "ExamplePolicy01",
+  "Statement": [
+    {
+      "Sid": "ExampleStatement01",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "${aws_iam_user.test-user.arn}"
+      },
+      "Action": "s3:*",
+      "Resource": [
+        "${aws_s3_bucket.finance.arn}",
+        "${aws_s3_bucket.finance.arn}/*"
+      ]
+    }
+  ]
+}
+EOF
 }
