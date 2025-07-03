@@ -84,3 +84,28 @@ resource "aws_s3_bucket_policy" "finance-policy" {
 }
 EOF
 }
+
+
+resource "aws_dynamodb_table" "cars" {
+  name         = "cars"
+  hash_key     = "VIN"
+  billing_mode = "PAY_PER_REQUEST"
+
+  attribute {
+    name = "VIN"
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table_item" "car-items" {
+  table_name = aws_dynamodb_table.cars.name
+  hash_key   = "VIN"
+  item       = <<ITEM
+{
+  "VIN": {"S": "1HGCM82633A004352"},
+  "Make": {"S": "Honda"},
+  "Model": {"S": "Accord"},
+  "Year": {"N": "2003"}
+}
+ITEM
+}
