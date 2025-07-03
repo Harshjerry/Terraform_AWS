@@ -109,3 +109,44 @@ resource "aws_dynamodb_table_item" "car-items" {
 }
 ITEM
 }
+
+
+ resource "aws_instance" "webserver" {
+ ami= "ami-020cba7c55df1f615"
+ instance_type = "t2.micro"
+ key_name      = aws_key_pair.webserver_key.key_name
+ tags = {
+ Name= "webserver"
+ Description = "An Nginx WebServer on Ubuntu"
+ }
+
+  user_data = <<-EOF
+ #!/bin/bash
+ sudo apt update
+ sudo apt install nginx-y
+ systemctl enable nginx
+ systemctl start nginx
+ EOF
+ vpc_security_group_ids = [aws_security_group.ssh-access.id]
+ }
+
+
+ resource "aws_security_group" "ssh-access" {
+  name        = "ssh-access"
+  description = "Allow SSH access from the Internet"
+  ingress {
+    from_port       = 22
+    to_port         = 22
+    protocol        = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+output "publicIP" {
+  value = aws_instance.webserver.public_ip
+}
+# Create a key pair
+resource "aws_key_pair" "webserver_key" {
+  key_name   = "webserver-key"
+  public_key = file("~/.ssh/id_rsa.pub")  # Path to your public key
+}
