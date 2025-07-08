@@ -160,3 +160,4 @@ resource "aws_instance" "proj" {
     Name = terraform.workspace
   }
 }
+//Destoryed everything
